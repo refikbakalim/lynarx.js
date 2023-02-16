@@ -9,19 +9,25 @@ module.exports = {
 		const queue = client.player.getQueue(interaction.guild.id);
 
 		if (!queue) {
-			await interaction.reply("There are no songs in the queue");
-			return;
+			return await interaction.reply("There is no queue!");
 		}
 
-		const currentSong = queue.current;
+		await interaction.deferReply();
 
-		if (queue.tracks.length > 0) await queue.play();
-		else await queue.skip();
+		const currentSong = queue.nowPlaying();
 
-		const nextSong = queue.current;
-
-		await interaction.reply(
-			` ❌ | Skipped **${currentSong.title}**!\n:white_check_mark: | Now playing! **${nextSong.title}**`
-		);
+		if (queue.tracks.length > 0) {
+			await queue.play();
+			const nextSong = queue.nowPlaying();
+			return await interaction.followUp(
+				` ❌ | Skipped **${currentSong.title}**!\n:white_check_mark: | Now playing! **${nextSong.title}**`
+			);
+		} else {
+			await queue.skip();
+			await queue.clear();
+			return await interaction.followUp(
+				` ❌ | Skipped **${currentSong.title}**!\n❌ | No songs in the queue!`
+			);
+		}
 	},
 };

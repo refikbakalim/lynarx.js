@@ -131,3 +131,4 @@ dist
 
 # Extras
 .eslintrc.json
+.vscode

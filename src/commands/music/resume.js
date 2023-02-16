@@ -8,12 +8,11 @@ module.exports = {
 		const queue = client.player.getQueue(interaction.guild.id);
 
 		if (!queue) {
-			await interaction.reply("No songs in the queue");
-			return;
+			return await interaction.reply("There is no queue!");
 		}
 
 		queue.setPaused(false);
 
-		await interaction.reply("Player has been resumed.");
+		return await interaction.reply("Player has been resumed!");
 	},
 };

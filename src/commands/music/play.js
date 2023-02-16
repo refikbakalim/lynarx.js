@@ -56,7 +56,8 @@ module.exports = {
 			});
 
 		const queue = client.player.createQueue(interaction.guild, {
-			disableVolume: false,
+			disableVolume: true,
+			leaveOnEndCooldown: 60000,
 			metadata: {
 				channel: interaction.channel,
 			},
@@ -84,11 +85,11 @@ module.exports = {
 			});
 
 			if (result.tracks.length === 0)
-				return interaction.followUp("No results");
+				return interaction.followUp("No results!");
 
 			const track = result.tracks[0];
 
-			if (queue.nowPlaying()) {
+			if (queue.playing) {
 				await queue.addTrack(track);
 				return await interaction.followUp({
 					content: `⏱️ | Added **${track.title}** to queue!`,
@@ -111,7 +112,7 @@ module.exports = {
 
 			await queue.addTracks(result.tracks);
 
-			if (!queue.nowPlaying() || !queue.playing) {
+			if (!queue.playing) {
 				await queue.play();
 				return await interaction.followUp({
 					content: `:white_check_mark: | Now playing! **${
@@ -136,7 +137,7 @@ module.exports = {
 					content: `❌ | **${query}** not found!`,
 				});
 
-			if (queue.nowPlaying()) {
+			if (queue.playing) {
 				await queue.addTrack(track);
 				return await interaction.followUp({
 					content: `⏱️ | Added **${track.title}** to queue!`,
