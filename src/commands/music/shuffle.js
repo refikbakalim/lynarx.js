@@ -2,8 +2,8 @@ const { SlashCommandBuilder } = require("discord.js");
 
 module.exports = {
 	data: new SlashCommandBuilder()
-		.setName("queue")
-		.setDescription("Returns the queue."),
+		.setName("shuffle")
+		.setDescription("Shuffles the queue."),
 	async execute(interaction, client) {
 		await interaction.deferReply();
 
@@ -13,12 +13,8 @@ module.exports = {
 			return await interaction.followUp("Queue is empty!");
 		}
 
-		return await interaction.followUp(
-			`Current queue:\n ${queue.tracks
-				.map((track, i) => {
-					return `#${i + 1} - ${track.title}`;
-				})
-				.join("\n")}`
-		);
+		await queue.shuffle();
+
+		return await interaction.followUp("Queue has been shuffled!");
 	},
 };

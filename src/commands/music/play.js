@@ -8,7 +8,7 @@ module.exports = {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("search")
-				.setDescription("Searches for a song and plays it")
+				.setDescription("Searches for a song and plays it.")
 				.addStringOption((option) =>
 					option
 						.setName("search_terms")
@@ -19,7 +19,7 @@ module.exports = {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("playlist")
-				.setDescription("Plays a playlist from YT")
+				.setDescription("Plays songs from playlist(Youtube, Spotify).")
 				.addStringOption((option) =>
 					option
 						.setName("url")
@@ -30,7 +30,9 @@ module.exports = {
 		.addSubcommand((subcommand) =>
 			subcommand
 				.setName("song")
-				.setDescription("Plays a single song from YT")
+				.setDescription(
+					"Plays a single song from url(Youtube, Spotify)."
+				)
 				.addStringOption((option) =>
 					option
 						.setName("url")
@@ -39,8 +41,10 @@ module.exports = {
 				)
 		),
 	async execute(interaction, client) {
+		await interaction.deferReply();
+
 		if (!interaction.member.voice.channelId)
-			return await interaction.reply({
+			return await interaction.followUp({
 				content: "You are not in a voice channel!",
 				ephemeral: true,
 			});
@@ -50,7 +54,7 @@ module.exports = {
 			interaction.member.voice.channelId !==
 				interaction.guild.members.me.voice.channelId
 		)
-			return await interaction.reply({
+			return await interaction.followUp({
 				content: "You are not in my voice channel!",
 				ephemeral: true,
 			});
@@ -58,6 +62,7 @@ module.exports = {
 		const queue = client.player.createQueue(interaction.guild, {
 			disableVolume: true,
 			leaveOnEndCooldown: 60000,
+			leaveOnEmptyCooldown: 20000,
 			metadata: {
 				channel: interaction.channel,
 			},
@@ -69,19 +74,18 @@ module.exports = {
 		} catch (error) {
 			console.error(error);
 			queue.destroy();
-			return await interaction.reply({
+			return await interaction.followUp({
 				content: "Could not join your voice channel!",
 				ephemeral: true,
 			});
 		}
-		await interaction.deferReply();
 
 		if (interaction.options.getSubcommand() === "song") {
 			let url = interaction.options.getString("url");
 
 			const result = await client.player.search(url, {
 				requestedBy: interaction.user,
-				searchEngine: QueryType.YOUTUBE_VIDEO,
+				searchEngine: QueryType.AUTO,
 			});
 
 			if (result.tracks.length === 0)
@@ -92,32 +96,32 @@ module.exports = {
 			if (queue.playing) {
 				await queue.addTrack(track);
 				return await interaction.followUp({
-					content: `⏱️ | Added **${track.title}** to queue!`,
+					content: `Added to queue! **${track.title}**`,
 				});
 			} else {
 				await queue.play(track);
 				return await interaction.followUp({
-					content: `:white_check_mark: | Now playing! **${track.title}**`,
+					content: `Now playing! **${track.title}**`,
 				});
 			}
 		} else if (interaction.options.getSubcommand() === "playlist") {
 			let url = interaction.options.getString("url");
 			const result = await client.player.search(url, {
 				requestedBy: interaction.user,
-				searchEngine: QueryType.YOUTUBE_PLAYLIST,
+				searchEngine: QueryType.AUTO,
 			});
 
 			if (result.tracks.length === 0)
-				return interaction.followUp(`No playlists found with ${url}`);
+				return interaction.followUp(
+					`No playlist found with this url! ${url}`
+				);
 
 			await queue.addTracks(result.tracks);
 
 			if (!queue.playing) {
 				await queue.play();
 				return await interaction.followUp({
-					content: `:white_check_mark: | Now playing! **${
-						queue.nowPlaying().title
-					}** to queue!`,
+					content: `Now playing! **${queue.nowPlaying().title}**`,
 				});
 			}
 
@@ -134,18 +138,18 @@ module.exports = {
 				.then((x) => x.tracks[0]);
 			if (!track)
 				return await interaction.followUp({
-					content: `❌ | **${query}** not found!`,
+					content: `Not found! **${query}**`,
 				});
 
 			if (queue.playing) {
 				await queue.addTrack(track);
 				return await interaction.followUp({
-					content: `⏱️ | Added **${track.title}** to queue!`,
+					content: `Added to queue! **${track.title}**`,
 				});
 			} else {
 				await queue.play(track);
 				return await interaction.followUp({
-					content: `:white_check_mark: | Now playing! **${track.title}**`,
+					content: `Now playing! **${track.title}**`,
 				});
 			}
 		}
